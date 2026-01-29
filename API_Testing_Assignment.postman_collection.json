@@ -1,0 +1,788 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "API Testing Assignment - Complete Collection",
+		"description": "# API Testing Assignment No. 4\n\nThis collection demonstrates comprehensive API testing using Postman including:\n\n1. **All HTTP Methods**: GET, POST, PUT, PATCH, DELETE\n2. **Base URL as Variable**: Using `{{baseUrl}}` collection variable\n3. **Random Request Body Data**: Generated using `$randomFirstName`, `$randomLastName`, etc.\n4. **JSON Response Parsing**: Logging response values in Tests\n5. **Chai Assertions**: Including passing and intentionally failing test cases\n6. **Pre-request & Tests Scripts**: For variable handling\n7. **API Chaining**: Using response variables across requests\n\n## API Used\n- https://restful-api.dev/ - A free REST API for testing",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. GET - List All Objects",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request Script: Setting up variables before the request",
+							"console.log('=== PRE-REQUEST SCRIPT ===');",
+							"console.log('Starting GET request to fetch all objects...');",
+							"",
+							"// Store request timestamp",
+							"pm.collectionVariables.set('requestTimestamp', new Date().toISOString());",
+							"console.log('Request Timestamp:', pm.collectionVariables.get('requestTimestamp'));"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests Script: Parsing JSON and writing assertions",
+							"console.log('=== TEST SCRIPT ===');",
+							"",
+							"// Parse JSON Response",
+							"let jsonData = pm.response.json();",
+							"console.log('Response received with', jsonData.length, 'objects');",
+							"",
+							"// Log first few objects",
+							"if (jsonData.length > 0) {",
+							"    console.log('First object:', JSON.stringify(jsonData[0]));",
+							"    // Store first object ID for chaining",
+							"    pm.collectionVariables.set('existingObjectId', jsonData[0].id);",
+							"    console.log('Stored existingObjectId:', jsonData[0].id);",
+							"}",
+							"",
+							"// Chai Assertions",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response is an array', function () {",
+							"    pm.expect(jsonData).to.be.an('array');",
+							"});",
+							"",
+							"pm.test('Response time is less than 5000ms', function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+							"});",
+							"",
+							"pm.test('Content-Type is application/json', function () {",
+							"    pm.response.to.have.header('Content-Type');",
+							"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/objects",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"objects"
+					]
+				},
+				"description": "GET request to fetch all objects from the API. Demonstrates:\n- Using baseUrl variable\n- Parsing JSON response\n- Logging values to console\n- Chai assertions for status, response type, and headers"
+			},
+			"response": []
+		},
+		{
+			"name": "2. POST - Create New Object (Random Data)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request Script: Generate random data for request body",
+							"console.log('=== PRE-REQUEST SCRIPT ===');",
+							"",
+							"// Generate random product data",
+							"let randomProductName = pm.variables.replaceIn('{{$randomProductName}}');",
+							"let randomPrice = Math.floor(Math.random() * 9000) + 100; // Random price 100-9099",
+							"let randomYear = Math.floor(Math.random() * 5) + 2020; // 2020-2024",
+							"let randomCPU = pm.variables.replaceIn('{{$randomProductAdjective}}') + ' Processor';",
+							"let randomStorage = (Math.floor(Math.random() * 4) + 1) * 256 + ' GB';",
+							"",
+							"// Store in collection variables for use in request body",
+							"pm.collectionVariables.set('randomProductName', randomProductName);",
+							"pm.collectionVariables.set('randomPrice', randomPrice);",
+							"pm.collectionVariables.set('randomYear', randomYear);",
+							"pm.collectionVariables.set('randomCPU', randomCPU);",
+							"pm.collectionVariables.set('randomStorage', randomStorage);",
+							"",
+							"console.log('Generated Random Data:');",
+							"console.log('- Product Name:', randomProductName);",
+							"console.log('- Price:', randomPrice);",
+							"console.log('- Year:', randomYear);",
+							"console.log('- CPU:', randomCPU);",
+							"console.log('- Storage:', randomStorage);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests Script: Validate creation and chain response data",
+							"console.log('=== TEST SCRIPT ===');",
+							"",
+							"// Parse JSON Response",
+							"let jsonData = pm.response.json();",
+							"console.log('Created Object Response:', JSON.stringify(jsonData, null, 2));",
+							"",
+							"// Log specific values from response",
+							"console.log('Created Object Details:');",
+							"console.log('- ID:', jsonData.id);",
+							"console.log('- Name:', jsonData.name);",
+							"console.log('- Created At:', jsonData.createdAt);",
+							"",
+							"// Store created object ID for API chaining",
+							"pm.collectionVariables.set('createdObjectId', jsonData.id);",
+							"console.log('Stored createdObjectId for chaining:', jsonData.id);",
+							"",
+							"// Chai Assertions",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response contains id', function () {",
+							"    pm.expect(jsonData).to.have.property('id');",
+							"    pm.expect(jsonData.id).to.be.a('string');",
+							"});",
+							"",
+							"pm.test('Response contains name matching request', function () {",
+							"    pm.expect(jsonData.name).to.equal(pm.collectionVariables.get('randomProductName'));",
+							"});",
+							"",
+							"pm.test('Response contains createdAt timestamp', function () {",
+							"    pm.expect(jsonData).to.have.property('createdAt');",
+							"});",
+							"",
+							"pm.test('Response data object exists', function () {",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData.data).to.be.an('object');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"{{randomProductName}}\",\n    \"data\": {\n        \"year\": {{randomYear}},\n        \"price\": {{randomPrice}},\n        \"CPU model\": \"{{randomCPU}}\",\n        \"Hard disk size\": \"{{randomStorage}}\"\n    }\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/objects",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"objects"
+					]
+				},
+				"description": "POST request to create a new object with randomly generated data. Demonstrates:\n- Pre-request script generating random values\n- Storing variables for use in request body\n- API chaining by storing created object ID"
+			},
+			"response": []
+		},
+		{
+			"name": "3. GET - Fetch Created Object (Chained)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request Script: Verify chained variable exists",
+							"console.log('=== PRE-REQUEST SCRIPT ===');",
+							"",
+							"let objectId = pm.collectionVariables.get('createdObjectId');",
+							"console.log('Using chained variable createdObjectId:', objectId);",
+							"",
+							"if (!objectId) {",
+							"    console.error('ERROR: createdObjectId not found! Run POST request first.');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests Script: Validate fetched object",
+							"console.log('=== TEST SCRIPT ===');",
+							"",
+							"// Parse JSON Response",
+							"let jsonData = pm.response.json();",
+							"console.log('Fetched Object:', JSON.stringify(jsonData, null, 2));",
+							"",
+							"// Log parsed values",
+							"console.log('Object Details:');",
+							"console.log('- ID:', jsonData.id);",
+							"console.log('- Name:', jsonData.name);",
+							"if (jsonData.data) {",
+							"    console.log('- Year:', jsonData.data.year);",
+							"    console.log('- Price:', jsonData.data.price);",
+							"}",
+							"",
+							"// Chai Assertions",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Object ID matches chained variable', function () {",
+							"    pm.expect(jsonData.id).to.equal(pm.collectionVariables.get('createdObjectId'));",
+							"});",
+							"",
+							"pm.test('Object has correct structure', function () {",
+							"    pm.expect(jsonData).to.have.property('id');",
+							"    pm.expect(jsonData).to.have.property('name');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/objects/{{createdObjectId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"objects",
+						"{{createdObjectId}}"
+					]
+				},
+				"description": "GET request to fetch a specific object using the ID from the previous POST request. Demonstrates:\n- API chaining using createdObjectId variable\n- Validating chained data"
+			},
+			"response": []
+		},
+		{
+			"name": "4. PUT - Update Entire Object (Chained)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request Script: Generate new random data for update",
+							"console.log('=== PRE-REQUEST SCRIPT ===');",
+							"",
+							"// Generate new random data for complete update",
+							"let updatedName = 'Updated ' + pm.variables.replaceIn('{{$randomProductName}}');",
+							"let updatedPrice = Math.floor(Math.random() * 5000) + 500;",
+							"let updatedYear = 2025;",
+							"let updatedColor = pm.variables.replaceIn('{{$randomColor}}');",
+							"",
+							"pm.collectionVariables.set('updatedProductName', updatedName);",
+							"pm.collectionVariables.set('updatedPrice', updatedPrice);",
+							"pm.collectionVariables.set('updatedYear', updatedYear);",
+							"pm.collectionVariables.set('updatedColor', updatedColor);",
+							"",
+							"console.log('Generated Update Data:');",
+							"console.log('- Updated Name:', updatedName);",
+							"console.log('- Updated Price:', updatedPrice);",
+							"console.log('- Updated Year:', updatedYear);",
+							"console.log('- Color:', updatedColor);",
+							"console.log('Updating object ID:', pm.collectionVariables.get('createdObjectId'));"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests Script: Validate PUT update",
+							"console.log('=== TEST SCRIPT ===');",
+							"",
+							"// Parse JSON Response",
+							"let jsonData = pm.response.json();",
+							"console.log('Updated Object Response:', JSON.stringify(jsonData, null, 2));",
+							"",
+							"// Log updated values",
+							"console.log('Updated Values:');",
+							"console.log('- ID:', jsonData.id);",
+							"console.log('- New Name:', jsonData.name);",
+							"console.log('- Updated At:', jsonData.updatedAt);",
+							"",
+							"// Chai Assertions",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Object name was updated', function () {",
+							"    pm.expect(jsonData.name).to.equal(pm.collectionVariables.get('updatedProductName'));",
+							"});",
+							"",
+							"pm.test('Response contains updatedAt timestamp', function () {",
+							"    pm.expect(jsonData).to.have.property('updatedAt');",
+							"});",
+							"",
+							"pm.test('Object ID remains same after update', function () {",
+							"    pm.expect(jsonData.id).to.equal(pm.collectionVariables.get('createdObjectId'));",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"{{updatedProductName}}\",\n    \"data\": {\n        \"year\": {{updatedYear}},\n        \"price\": {{updatedPrice}},\n        \"color\": \"{{updatedColor}}\",\n        \"capacity\": \"512 GB\"\n    }\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/objects/{{createdObjectId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"objects",
+						"{{createdObjectId}}"
+					]
+				},
+				"description": "PUT request to completely update an existing object. Demonstrates:\n- Using chained object ID from previous request\n- Generating new random update data\n- Complete object replacement"
+			},
+			"response": []
+		},
+		{
+			"name": "5. PATCH - Partial Update Object (Chained)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request Script: Generate data for partial update",
+							"console.log('=== PRE-REQUEST SCRIPT ===');",
+							"",
+							"// Generate random name for partial update",
+							"let patchedName = 'Patched Device - ' + pm.variables.replaceIn('{{$randomCompanyName}}');",
+							"pm.collectionVariables.set('patchedName', patchedName);",
+							"",
+							"console.log('Partial Update Data:');",
+							"console.log('- Patched Name:', patchedName);",
+							"console.log('Patching object ID:', pm.collectionVariables.get('createdObjectId'));"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests Script: Validate PATCH update",
+							"console.log('=== TEST SCRIPT ===');",
+							"",
+							"// Parse JSON Response",
+							"let jsonData = pm.response.json();",
+							"console.log('Patched Object Response:', JSON.stringify(jsonData, null, 2));",
+							"",
+							"// Log patched values",
+							"console.log('Patched Values:');",
+							"console.log('- ID:', jsonData.id);",
+							"console.log('- Patched Name:', jsonData.name);",
+							"console.log('- Updated At:', jsonData.updatedAt);",
+							"",
+							"// Chai Assertions",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Name was patched correctly', function () {",
+							"    pm.expect(jsonData.name).to.equal(pm.collectionVariables.get('patchedName'));",
+							"});",
+							"",
+							"pm.test('Response contains updatedAt', function () {",
+							"    pm.expect(jsonData).to.have.property('updatedAt');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"{{patchedName}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/objects/{{createdObjectId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"objects",
+						"{{createdObjectId}}"
+					]
+				},
+				"description": "PATCH request to partially update an object (only updating the name). Demonstrates:\n- Partial update vs full PUT update\n- Using chained object ID\n- Minimal payload updates"
+			},
+			"response": []
+		},
+		{
+			"name": "6. DELETE - Remove Object (Chained)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request Script: Log deletion target",
+							"console.log('=== PRE-REQUEST SCRIPT ===');",
+							"",
+							"let objectId = pm.collectionVariables.get('createdObjectId');",
+							"console.log('Preparing to DELETE object ID:', objectId);",
+							"",
+							"// Store timestamp of deletion",
+							"pm.collectionVariables.set('deletionTimestamp', new Date().toISOString());",
+							"console.log('Deletion Timestamp:', pm.collectionVariables.get('deletionTimestamp'));"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests Script: Validate DELETE operation",
+							"console.log('=== TEST SCRIPT ===');",
+							"",
+							"// Parse JSON Response",
+							"let jsonData = pm.response.json();",
+							"console.log('Delete Response:', JSON.stringify(jsonData, null, 2));",
+							"",
+							"// Log confirmation message",
+							"console.log('Deletion Message:', jsonData.message);",
+							"",
+							"// Chai Assertions",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response confirms deletion', function () {",
+							"    pm.expect(jsonData).to.have.property('message');",
+							"    pm.expect(jsonData.message).to.include('deleted');",
+							"});",
+							"",
+							"pm.test('Deleted object ID is mentioned in response', function () {",
+							"    let deletedId = pm.collectionVariables.get('createdObjectId');",
+							"    pm.expect(jsonData.message).to.include(deletedId);",
+							"});",
+							"",
+							"// Clear the stored ID after deletion",
+							"console.log('Clearing createdObjectId variable after successful deletion');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/objects/{{createdObjectId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"objects",
+						"{{createdObjectId}}"
+					]
+				},
+				"description": "DELETE request to remove the created object. Demonstrates:\n- Using chained object ID for deletion\n- Validating deletion confirmation message\n- Complete CRUD cycle"
+			},
+			"response": []
+		},
+		{
+			"name": "7. GET - Verify Deletion (With Failing Test)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request Script: Prepare to verify deletion",
+							"console.log('=== PRE-REQUEST SCRIPT ===');",
+							"",
+							"let deletedId = pm.collectionVariables.get('createdObjectId');",
+							"console.log('Verifying deletion of object ID:', deletedId);",
+							"console.log('Expected: 404 Not Found response');"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests Script: Verify deletion and include INTENTIONAL FAILING TEST",
+							"console.log('=== TEST SCRIPT ===');",
+							"",
+							"// Parse JSON Response",
+							"let jsonData = pm.response.json();",
+							"console.log('Verification Response:', JSON.stringify(jsonData, null, 2));",
+							"",
+							"// Chai Assertions - Passing Tests",
+							"pm.test('Status code is 404 (Object Not Found)', function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"",
+							"pm.test('Response contains error message', function () {",
+							"    pm.expect(jsonData).to.have.property('error');",
+							"});",
+							"",
+							"// ============================================",
+							"// INTENTIONAL FAILING TEST CASE",
+							"// This test is designed to FAIL to demonstrate",
+							"// how Postman handles failing assertions",
+							"// ============================================",
+							"pm.test('INTENTIONAL FAIL: Status should be 200 (This test is designed to fail)', function () {",
+							"    // This assertion will FAIL because we expect 200 but get 404",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('INTENTIONAL FAIL: Deleted object should still exist (This test is designed to fail)', function () {",
+							"    // This assertion will FAIL because the object was deleted",
+							"    pm.expect(jsonData).to.not.have.property('error');",
+							"    pm.expect(jsonData).to.have.property('name');",
+							"});",
+							"",
+							"console.log('NOTE: The failing tests above are INTENTIONAL to fulfill assignment requirements');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/objects/{{createdObjectId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"objects",
+						"{{createdObjectId}}"
+					]
+				},
+				"description": "GET request to verify the object was deleted. This request includes INTENTIONAL FAILING TEST CASES to demonstrate Postman's test failure handling as required by the assignment.\n\nExpected: 404 Not Found (object no longer exists)"
+			},
+			"response": []
+		},
+		{
+			"name": "8. GET - Countries API (Additional Example)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request Script: Set country code variable",
+							"console.log('=== PRE-REQUEST SCRIPT ===');",
+							"",
+							"// Store country code for the request",
+							"pm.collectionVariables.set('countryCode', 'PK');",
+							"console.log('Fetching information for country code:', pm.collectionVariables.get('countryCode'));"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests Script: Parse and log country data",
+							"console.log('=== TEST SCRIPT ===');",
+							"",
+							"// Parse JSON Response",
+							"let jsonData = pm.response.json();",
+							"let country = jsonData[0];",
+							"",
+							"console.log('Country Information:');",
+							"console.log('- Name:', country.name.common);",
+							"console.log('- Official Name:', country.name.official);",
+							"console.log('- Capital:', country.capital ? country.capital[0] : 'N/A');",
+							"console.log('- Region:', country.region);",
+							"console.log('- Population:', country.population.toLocaleString());",
+							"console.log('- Languages:', Object.values(country.languages || {}).join(', '));",
+							"",
+							"// Store country name for potential chaining",
+							"pm.collectionVariables.set('fetchedCountryName', country.name.common);",
+							"",
+							"// Chai Assertions",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response is an array', function () {",
+							"    pm.expect(jsonData).to.be.an('array');",
+							"});",
+							"",
+							"pm.test('Country has required properties', function () {",
+							"    pm.expect(country).to.have.property('name');",
+							"    pm.expect(country).to.have.property('capital');",
+							"    pm.expect(country).to.have.property('region');",
+							"    pm.expect(country).to.have.property('population');",
+							"});",
+							"",
+							"pm.test('Country code matches request', function () {",
+							"    pm.expect(country.cca2).to.equal(pm.collectionVariables.get('countryCode'));",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://restcountries.com/v3.1/alpha/{{countryCode}}",
+					"protocol": "https",
+					"host": [
+						"restcountries",
+						"com"
+					],
+					"path": [
+						"v3.1",
+						"alpha",
+						"{{countryCode}}"
+					]
+				},
+				"description": "GET request to REST Countries API to fetch country information. Demonstrates:\n- Using a different API for variety\n- Variable substitution in URL\n- Parsing nested JSON response"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Collection-level Pre-request Script",
+					"console.log('========================================');",
+					"console.log('API Testing Assignment - Collection Run');",
+					"console.log('Base URL:', pm.collectionVariables.get('baseUrl'));",
+					"console.log('========================================');"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Collection-level Test Script",
+					"console.log('Request completed:', pm.info.requestName);",
+					"console.log('Response Status:', pm.response.code, pm.response.status);"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://api.restful-api.dev",
+			"type": "string"
+		},
+		{
+			"key": "createdObjectId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "existingObjectId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "requestTimestamp",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "randomProductName",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "randomPrice",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "randomYear",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "randomCPU",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "randomStorage",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "updatedProductName",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "updatedPrice",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "updatedYear",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "updatedColor",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "patchedName",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "deletionTimestamp",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "countryCode",
+			"value": "PK",
+			"type": "string"
+		},
+		{
+			"key": "fetchedCountryName",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
